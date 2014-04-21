@@ -1,58 +1,63 @@
 #!/usr/bin/env node
 
 var exec = require('child_process').exec,
+  os = require('os'),
   scribble = require('scribble'),
-  child, currentArtist, currentTrack,
+  child, lastArtist, lastTrack,
   username = require('./config').username,
   password = require('./config').password,
   apiKey = require('./config').apiKey,
   apiSecret = require('./config').apiSecret;
 
 var Scrobbler = new scribble(apiKey, apiSecret, username, password);
+var systemType = os.type();
 
 // method definitions
-function getCurrentTrack(callback) {
+function getCurrentState(callback) {
   child = exec('osascript -e \'tell application "iTunes" to '
     + '{artist, name, album, duration} of current track '
-    + '& player position\'',
+    + '& player position & player state\'',
     function(error, stdout, stderr) {
       this.info = stdout.substring(0, stdout.length - 1);
       this.infoArray = info.split(', ');
-      this.artist = infoArray[0];
-      this.title = infoArray[1];
-      this.album = infoArray[2];
-      this.position = +infoArray[4] / +infoArray[3];
 
-      callback({
-        artist: this.artist,
-        track: this.title,
-        album: this.album,
-        position: this.position
-      });
+      this.song = {
+        artist: infoArray[0],
+        track: infoArray[1],
+        album: infoArray[2],
+        position: +infoArray[4] / +infoArray[3],
+        state: infoArray[5]
+      };
+
+      callback(this.song);
     });
 };
 
 
 // program
 setInterval(function() {
-  getCurrentTrack(function(song){
+  getCurrentState(function(song){
+    /*
     console.log('artist:', song.artist);
     console.log('title:', song.track);
     console.log('album:', song.album);
     console.log('progress:', song.position);
+    console.log('state:', song.state);
+    */
   
-    if (song.artist === currentArtist && song.track === currentTrack) {
-      console.log('ne saljem jer je ista pjesma', currentTrack);
-    }
-    else if (song.position > 0.4) {
-      console.log('upisujem!');
-      currentArtist = song.artist;
-      currentTrack = song.track;
+    if (song.position > 0.9 &&
+      song.artist !== lastArtist &&
+      song.track !== lastTrack &&
+      song.state === 'playing'){
 
-      Scrobbler.Scrobble(song);
+      console.log('upisujem!');
+      lastArtist = song.artist;
+      lastTrack = song.track;
+
+      Scrobbler.Scrobble(song, function(post_return_data) {});
     }
-    else {
-      console.log('ne saljem jer nije zrelo');
+    else if (song.position < 0.9 && song.state === 'playing') {
+      Scrobbler.NowPlaying(song, function(post_return_data) {});
     }
   });
 }, 2000);
