@@ -1,0 +1,26 @@
+{
+  "name": "node-scribble",
+  "version": "0.0.0",
+  "description": "last.fm scrobble client in node.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mkozjak/node-scribble.git"
+  },
+  "keywords": [
+    "node",
+    "last.fm",
+    "scrobble",
+    "scribble",
+    "node-scribble"
+  ],
+  "author": "Mario Kozjak",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mkozjak/node-scribble/issues"
+  },
+  "homepage": "https://github.com/mkozjak/node-scribble"
+}
